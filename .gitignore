@@ -23,6 +23,7 @@ override.tf.json
 .terraformrc
 terraform.rc
 .terraform.lock.hcl
+tfplan
 
 #ignore adc file
 terraform/de-devops-adc.json

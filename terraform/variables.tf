@@ -10,12 +10,6 @@ variable "region" {
   default     = "asia-southeast1"
 }
 
-variable "bucket_name" {
-  description = "The name of the GCS bucket"
-  type        = string
-  default     = "gcp-example-bucket_name"
-}
-
 variable "credentials_file" {
   description = "Path to the service account key file i.e adc file"
   type        = string
