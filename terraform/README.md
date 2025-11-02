@@ -38,7 +38,10 @@ This file defines the output values that will be displayed after applying the co
 1. Install Terraform (version 1.0.0 or later recommended)
 2. Set up a GCP account and project
 3. Create a service account with appropriate permissions
-4. Download the service account key file (JSON)
+4. Download the service account key file (JSON) <gcloud auth application-default login>
+5. it will save file in /Users/sandeepkumarjha/.config/gcloud/application_default_credentials.json
+6. cat <above location> copy content and create a new json file <de-devops-adc.json> inside terraform folder
+7. paste the json content from above and update credentials_file path in varibles.tf
 
 ### Configuration
 Before running Terraform, update the `variables.tf` file or create a `terraform.tfvars` file with your specific values:

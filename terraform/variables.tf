@@ -1,7 +1,7 @@
 variable "project_id" {
   description = "The ID of the GCP project"
   type        = string
-  default     = "your_gcp_project_id"
+  default     = "de-devops"
 }
 
 variable "region" {
@@ -19,5 +19,5 @@ variable "bucket_name" {
 variable "credentials_file" {
   description = "Path to the service account key file i.e adc file"
   type        = string
-  default     = "/path_to_adc_file/my-adc.json"
+  default     = "de-devops-adc.json"
 }

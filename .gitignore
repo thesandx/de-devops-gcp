@@ -24,6 +24,9 @@ override.tf.json
 terraform.rc
 .terraform.lock.hcl
 
+#ignore adc file
+terraform/de-devops-adc.json
+
 # Python
 __pycache__/
 *.py[cod]
