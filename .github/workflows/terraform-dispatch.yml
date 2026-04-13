@@ -1,0 +1,60 @@
+name: "Terraform Dispatch"
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  dispatch-plan:
+    name: "Dispatch Terraform Plan"
+    if: github.event.issue.pull_request && contains(github.event.comment.body, '/plan')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch plan event
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.repos.createDispatchEvent({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              event_type: 'plan',
+              client_payload: {
+                pr_number: context.payload.issue.number,
+                comment_id: context.payload.comment.id
+              }
+            });
+
+            // Add a reaction to acknowledge the command
+            github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: '+1'
+            });
+
+  dispatch-apply:
+    name: "Dispatch Terraform Apply"
+    if: github.event.issue.pull_request && contains(github.event.comment.body, '/apply')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch apply event
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.repos.createDispatchEvent({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              event_type: 'apply',
+              client_payload: {
+                pr_number: context.payload.issue.number,
+                comment_id: context.payload.comment.id
+              }
+            });
+
+            // Add a reaction to acknowledge the command
+            github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: '+1'
+            });
