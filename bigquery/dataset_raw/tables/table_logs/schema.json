@@ -1,0 +1,77 @@
+{
+  "table_name": "logs",
+  "dataset": "raw",
+  "partitioning": {
+    "type": "DAY",
+    "field": "log_time"
+  },
+  "clustering": ["log_level", "service"],
+  "schema": [
+    {
+      "name": "log_id",
+      "type": "STRING",
+      "mode": "REQUIRED",
+      "description": "Unique log entry identifier"
+    },
+    {
+      "name": "log_time",
+      "type": "TIMESTAMP",
+      "mode": "REQUIRED",
+      "description": "Log entry timestamp"
+    },
+    {
+      "name": "log_level",
+      "type": "STRING",
+      "mode": "REQUIRED",
+      "description": "Log level (DEBUG, INFO, WARN, ERROR)"
+    },
+    {
+      "name": "service",
+      "type": "STRING",
+      "mode": "REQUIRED",
+      "description": "Service that generated the log"
+    },
+    {
+      "name": "message",
+      "type": "STRING",
+      "mode": "REQUIRED",
+      "description": "Log message content"
+    },
+    {
+      "name": "trace_id",
+      "type": "STRING",
+      "mode": "NULLABLE",
+      "description": "Trace identifier for distributed tracing"
+    },
+    {
+      "name": "span_id",
+      "type": "STRING",
+      "mode": "NULLABLE",
+      "description": "Span identifier for distributed tracing"
+    },
+    {
+      "name": "user_id",
+      "type": "STRING",
+      "mode": "NULLABLE",
+      "description": "User associated with the log entry"
+    },
+    {
+      "name": "ip_address",
+      "type": "STRING",
+      "mode": "NULLABLE",
+      "description": "Source IP address"
+    },
+    {
+      "name": "metadata",
+      "type": "JSON",
+      "mode": "NULLABLE",
+      "description": "Additional metadata as JSON"
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMP",
+      "mode": "REQUIRED",
+      "description": "Record creation timestamp"
+    }
+  ]
+}
