@@ -1,0 +1,171 @@
+name: "Terraform Apply"
+
+on:
+  repository_dispatch:
+    types: [apply]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number (for manual trigger)'
+        required: false
+        type: string
+
+env:
+  TF_VERSION: "1.6.0"
+  GCP_PROJECT_ID: ${{ vars.TF_PROJECT_ID || 'de-devops' }}
+  GCP_REGION: ${{ vars.TF_REGION || 'asia-southeast1' }}
+  NOTIFICATION_EMAIL: ${{ vars.NOTIFICATION_EMAIL || '' }}
+
+jobs:
+  terraform-apply:
+    name: "Terraform Apply"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      repository-projects: read
+      issues: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: "Get PR number"
+        id: pr-number
+        uses: actions/github-script@v7
+        with:
+          script: |
+            if (context.payload.pull_request) {
+              return context.payload.pull_request.number
+            }
+            if (context.payload.inputs && context.payload.inputs.pr_number) {
+              return context.payload.inputs.pr_number
+            }
+            return null
+
+      - name: "Check PR Approval Status"
+        id: approval-check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = parseInt(context.steps['pr-number'].outputs.result);
+
+            if (!prNumber) {
+              console.log('No PR number found, cannot check approval');
+              return false;
+            }
+
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+
+            if (pr.state === 'closed') {
+              throw new Error('PR is already closed');
+            }
+
+            const reviews = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+
+            const approved = reviews.data.some(r => r.state === 'APPROVED');
+
+            if (!approved) {
+              throw new Error('PR has not been approved. Please get PR approval before running /apply');
+            }
+
+            return true;
+
+      - name: Configure ADC
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+        run: |
+          echo "$GOOGLE_CREDENTIALS" | base64 --decode > /tmp/google_credentials.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/google_credentials.json" >> $GITHUB_ENV
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init
+        id: init
+        run: terraform init -backend=false -input=false
+
+      - name: Terraform Apply
+        id: apply
+        run: |
+          terraform apply -auto-approve -no-color 2>&1 | tee /tmp/apply_output.txt
+          echo "apply_exit_code=${PIPESTATUS[0]}" >> $GITHUB_ENV
+
+      - name: Send Email Notification
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const notificationEmail = process.env.NOTIFICATION_EMAIL;
+            const applyExitCode = context.env.apply_exit_code;
+            const prNumber = context.steps['pr-number'].outputs.result;
+            const fs = require('fs');
+            const applyOutput = fs.readFileSync('/tmp/apply_output.txt', 'utf8');
+
+            if (!notificationEmail) {
+              console.log('NOTIFICATION_EMAIL not set, skipping email notification');
+              return;
+            }
+
+            // Note: For actual email sending, you would use an email action like:
+            // dawidd6/action-send-email@v3
+            // Or configure GitHub's built-in email settings
+            console.log(`Email would be sent to: ${notificationEmail}`);
+            console.log(`Subject: Terraform Apply ${applyExitCode === '0' ? 'Successful' : 'Failed'} - PR #${prNumber}`);
+            console.log(`Apply output:\n${applyOutput}`);
+
+      - name: Update PR with Apply Result
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const applyOutput = fs.readFileSync('/tmp/apply_output.txt', 'utf8');
+            const prNumber = parseInt(context.steps['pr-number'].outputs.result);
+
+            if (!prNumber) {
+              console.log('No PR number found, skipping PR comment');
+              return;
+            }
+
+            const applyFailed = applyOutput.includes('Error') ||
+                                applyOutput.includes('error') ||
+                                context.env.apply_exit_code !== '0';
+
+            let commentBody = `## Terraform Apply Summary\n\n`;
+            if (applyFailed) {
+              commentBody += `❌ **Terraform Apply Failed**\n\n`;
+              commentBody += `The terraform apply encountered errors.\n\n`;
+              commentBody += `<details><summary>Apply Output</summary>\n\n`;
+              commentBody += '```\n' + applyOutput + '\n```\n</details>';
+            } else {
+              commentBody += `✅ **Terraform Apply Successful**\n\n`;
+              commentBody += `The terraform apply completed successfully.\n\n`;
+              commentBody += `<details><summary>Apply Output</summary>\n\n`;
+              commentBody += '```\n' + applyOutput + '\n```\n</details>';
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: commentBody
+            });
+
+      - name: Fail if apply failed
+        if: env.apply_exit_code != '0'
+        run: |
+          echo "Terraform apply failed with exit code ${{ env.apply_exit_code }}"
+          exit 1

@@ -1,0 +1,163 @@
+name: "Terraform Plan"
+
+on:
+  repository_dispatch:
+    types: [plan]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number (for manual trigger)'
+        required: false
+        type: string
+
+env:
+  TF_VERSION: "1.6.0"
+  GCP_PROJECT_ID: ${{ vars.TF_PROJECT_ID || 'de-devops' }}
+  GCP_REGION: ${{ vars.TF_REGION || 'asia-southeast1' }}
+
+jobs:
+  terraform-plan:
+    name: "Terraform Plan"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      repository-projects: read
+      issues: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: "Get PR number"
+        id: pr-number
+        uses: actions/github-script@v7
+        with:
+          script: |
+            if (context.payload.pull_request) {
+              return context.payload.pull_request.number
+            }
+            if (context.payload.inputs && context.payload.inputs.pr_number) {
+              return context.payload.inputs.pr_number
+            }
+            return null
+
+      - name: Configure ADC
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+        run: |
+          echo "$GOOGLE_CREDENTIALS" | base64 --decode > /tmp/google_credentials.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/google_credentials.json" >> $GITHUB_ENV
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init
+        id: init
+        run: |
+          terraform init \
+            -backend=false \
+            -input=false
+        env:
+          GOOGLE_CREDENTIALS_CONTENT: ${{ secrets.GOOGLE_CREDENTIALS }}
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform plan -no-color -out=tfplan 2>&1 | tee /tmp/plan_output.txt
+          echo "plan_exit_code=$?" >> $GITHUB_ENV
+
+      - name: Update PR with Plan Result
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const planOutput = fs.readFileSync('/tmp/plan_output.txt', 'utf8');
+            const prNumber = parseInt(context.steps['pr-number'].outputs.result);
+
+            if (!prNumber) {
+              console.log('No PR number found, skipping PR comment');
+              return;
+            }
+
+            const planFailed = planOutput.includes('Error') || planOutput.includes('error') || context.env.plan_exit_code !== '0';
+
+            let commentBody = `## Terraform Plan Summary\n\n`;
+            if (planFailed) {
+              commentBody += `❌ **Terraform Plan Failed**\n\n`;
+              commentBody += `The terraform plan encountered errors. Please review the logs.\n\n`;
+              commentBody += `<details><summary>Plan Output</summary>\n\n`;
+              commentBody += `\`\`\`\n${planOutput}\n\`\`\`\n</details>`;
+            } else {
+              commentBody += `✅ **Terraform Plan Successful**\n\n`;
+              commentBody += `The terraform plan completed successfully. You can now review the changes.\n\n`;
+              commentBody += `<details><summary>Plan Output</summary>\n\n`;
+              commentBody += `\`\`\`\n${planOutput}\n\`\`\`\n</details>\n\n`;
+              commentBody += `**Next Steps:**\n`;
+              commentBody += `1. Review the plan above\n`;
+              commentBody += `2. Get the PR approved\n`;
+              commentBody += `3. Comment \`/apply\` to run terraform apply`;
+            }
+
+            // Create or update comment
+            const { peter-evans/create-or-update-comment } = require('@actions/core');
+
+            // Get existing comments
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+
+            const planComment = comments.data.find(c =>
+              c.user.login === 'github-actions[bot]' &&
+              c.body.includes('Terraform Plan Summary')
+            );
+
+            if (planComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: planComment.id,
+                body: commentBody
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: commentBody
+              });
+            }
+
+            // If plan failed, request changes
+            if (planFailed) {
+              await github.rest.pulls.requestReviewers({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+                reviewers: [],
+              });
+
+              await github.rest.pulls.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+                state: 'request_changes',
+                body: `❌ **Terraform Plan Failed**\n\nThis PR cannot be merged until the terraform plan succeeds.\n\nPlease fix the errors and re-run \`/plan\` to generate a new plan.`
+              });
+            }
+
+      - name: Fail if plan failed
+        if: env.plan_exit_code != '0'
+        run: |
+          echo "Terraform plan failed with exit code $plan_exit_code"
+          exit 1

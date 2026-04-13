@@ -17,3 +17,9 @@ terraform validate           # validate syntax
 terraform plan -out=tfplan   # plan and save
 terraform apply tfplan       # apply the saved plan
 ```
+
+#todo
+ETL pipeline system design HLD and LLD
+which all features and resources we will need
+and then proceed one by one
+can use 
