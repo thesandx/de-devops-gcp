@@ -58,7 +58,7 @@ Ensure `master` branch has protection rules enabled requiring PR approval before
    - Run `terraform validate`
    - Run `terraform plan`
    - Post the plan output as a PR comment
-4. If the plan fails, the PR will be auto-rejected
+4. If the  plan fails, the PR will be auto-rejected
 
 ### Running Terraform Apply
 
