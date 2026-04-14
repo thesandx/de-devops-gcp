@@ -60,10 +60,7 @@ jobs:
       - name: Terraform Init
         id: init
         working-directory: terraform
-        run: |
-          terraform init \
-            -backend=false \
-            -input=false
+        run: terraform init -input=false
         env:
           GOOGLE_CREDENTIALS_CONTENT: ${{ secrets.GOOGLE_CREDENTIALS }}
 
