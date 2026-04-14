@@ -46,7 +46,7 @@ jobs:
         env:
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
         run: |
-          echo "$GOOGLE_CREDENTIALS" | base64 --decode > /tmp/google_credentials.json
+          echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
           echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/google_credentials.json" >> $GITHUB_ENV
 
       - name: Setup Terraform
@@ -81,14 +81,14 @@ jobs:
           script: |
             const fs = require('fs');
             const planOutput = fs.readFileSync('/tmp/plan_output.txt', 'utf8');
-            const prNumber = parseInt(context.steps['pr-number'].outputs.result);
+            const prNumber = parseInt('${{ steps.pr-number.outputs.result }}');
 
             if (!prNumber) {
               console.log('No PR number found, skipping PR comment');
               return;
             }
 
-            const planFailed = planOutput.includes('Error') || planOutput.includes('error') || context.env.plan_exit_code !== '0';
+            const planFailed = planOutput.includes('Error') || planOutput.includes('error') || process.env.plan_exit_code !== '0';
 
             let commentBody = `## Terraform Plan Summary\n\n`;
             if (planFailed) {
@@ -106,9 +106,6 @@ jobs:
               commentBody += `2. Get the PR approved\n`;
               commentBody += `3. Comment \`/apply\` to run terraform apply`;
             }
-
-            // Create or update comment
-            const { peter-evans/create-or-update-comment } = require('@actions/core');
 
             // Get existing comments
             const comments = await github.rest.issues.listComments({
@@ -138,20 +135,13 @@ jobs:
               });
             }
 
-            // If plan failed, request changes
+            // If plan failed, request changes via PR review
             if (planFailed) {
-              await github.rest.pulls.requestReviewers({
+              await github.rest.pulls.createReview({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 pull_number: prNumber,
-                reviewers: [],
-              });
-
-              await github.rest.pulls.update({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: prNumber,
-                state: 'request_changes',
+                event: 'REQUEST_CHANGES',
                 body: `❌ **Terraform Plan Failed**\n\nThis PR cannot be merged until the terraform plan succeeds.\n\nPlease fix the errors and re-run \`/plan\` to generate a new plan.`
               });
             }
