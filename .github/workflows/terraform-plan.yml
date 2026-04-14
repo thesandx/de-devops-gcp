@@ -91,19 +91,31 @@ jobs:
               return;
             }
 
-            const planFailed = planOutput.includes('Error') || planOutput.includes('error') || process.env.plan_exit_code !== '0';
+            const planFailed = process.env.plan_exit_code !== '0';
+
+            const formattedPlan = planOutput.split('\n').map(line => {
+              const trimmed = line.trim();
+              if (trimmed.startsWith('+ ')) {
+                return '+' + line.replace('+', ' ');
+              } else if (trimmed.startsWith('- ')) {
+                return '-' + line.replace('-', ' ');
+              } else if (trimmed.startsWith('~ ')) {
+                return '!' + line.replace('~', ' ');
+              }
+              return ' ' + line;
+            }).join('\n');
 
             let commentBody = `## Terraform Plan Summary\n\n`;
             if (planFailed) {
               commentBody += `❌ **Terraform Plan Failed**\n\n`;
               commentBody += `The terraform plan encountered errors. Please review the logs.\n\n`;
               commentBody += `<details><summary>Plan Output</summary>\n\n`;
-              commentBody += `\`\`\`\n${planOutput}\n\`\`\`\n</details>`;
+              commentBody += `\`\`\`diff\n${formattedPlan}\n\`\`\`\n</details>`;
             } else {
               commentBody += `✅ **Terraform Plan Successful**\n\n`;
               commentBody += `The terraform plan completed successfully. You can now review the changes.\n\n`;
               commentBody += `<details><summary>Plan Output</summary>\n\n`;
-              commentBody += `\`\`\`\n${planOutput}\n\`\`\`\n</details>\n\n`;
+              commentBody += `\`\`\`diff\n${formattedPlan}\n\`\`\`\n</details>\n\n`;
               commentBody += `**Next Steps:**\n`;
               commentBody += `1. Review the plan above\n`;
               commentBody += `2. The PR will be automatically approved upon successful plan\n`;
@@ -184,13 +196,28 @@ jobs:
               return;
             }
 
+            const fs = require('fs');
+            const planOutput = fs.readFileSync('/tmp/plan_output.txt', 'utf8');
+
+            const formattedPlan = planOutput.split('\n').map(line => {
+              const trimmed = line.trim();
+              if (trimmed.startsWith('+ ')) {
+                return '+' + line.replace('+', ' ');
+              } else if (trimmed.startsWith('- ')) {
+                return '-' + line.replace('-', ' ');
+              } else if (trimmed.startsWith('~ ')) {
+                return '!' + line.replace('~', ' ');
+              }
+              return ' ' + line;
+            }).join('\n');
+
             // Auto approve the PR
             await github.rest.pulls.createReview({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: prNumber,
               event: 'APPROVE',
-              body: `✅ **Terraform Plan Approved**\n\nThis PR has been automatically approved after a successful terraform plan.`
+              body: `✅ **Terraform Plan Approved**\n\n<details><summary>Plan Output</summary>\n\n\`\`\`diff\n${formattedPlan}\n\`\`\`\n</details>\n\nThis PR has been automatically approved after a successful terraform plan.`
             });
 
             console.log('PR automatically approved');
