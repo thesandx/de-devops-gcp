@@ -35,12 +35,15 @@ jobs:
         with:
           script: |
             if (context.payload.pull_request) {
-              return context.payload.pull_request.number
+              return context.payload.pull_request.number;
             }
             if (context.payload.inputs && context.payload.inputs.pr_number) {
-              return context.payload.inputs.pr_number
+              return context.payload.inputs.pr_number;
             }
-            return null
+            if (context.payload.client_payload && context.payload.client_payload.pr_number) {
+              return context.payload.client_payload.pr_number;
+            }
+            return null;
 
       - name: Configure ADC
         env:
@@ -56,6 +59,7 @@ jobs:
 
       - name: Terraform Init
         id: init
+        working-directory: terraform
         run: |
           terraform init \
             -backend=false \
@@ -65,13 +69,15 @@ jobs:
 
       - name: Terraform Validate
         id: validate
+        working-directory: terraform
         run: terraform validate
 
       - name: Terraform Plan
         id: plan
+        working-directory: terraform
         run: |
           terraform plan -no-color -out=tfplan 2>&1 | tee /tmp/plan_output.txt
-          echo "plan_exit_code=$?" >> $GITHUB_ENV
+          echo "plan_exit_code=${PIPESTATUS[0]}" >> $GITHUB_ENV
 
       - name: Update PR with Plan Result
         if: always()
