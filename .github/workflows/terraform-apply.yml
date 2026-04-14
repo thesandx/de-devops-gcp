@@ -36,12 +36,15 @@ jobs:
         with:
           script: |
             if (context.payload.pull_request) {
-              return context.payload.pull_request.number
+              return context.payload.pull_request.number;
             }
             if (context.payload.inputs && context.payload.inputs.pr_number) {
-              return context.payload.inputs.pr_number
+              return context.payload.inputs.pr_number;
             }
-            return null
+            if (context.payload.client_payload && context.payload.client_payload.pr_number) {
+              return context.payload.client_payload.pr_number;
+            }
+            return null;
 
       - name: "Check PR Approval Status"
         id: approval-check
@@ -93,10 +96,12 @@ jobs:
 
       - name: Terraform Init
         id: init
+        working-directory: terraform
         run: terraform init -backend=false -input=false
 
       - name: Terraform Apply
         id: apply
+        working-directory: terraform
         run: |
           terraform apply -auto-approve -no-color 2>&1 | tee /tmp/apply_output.txt
           echo "apply_exit_code=${PIPESTATUS[0]}" >> $GITHUB_ENV
