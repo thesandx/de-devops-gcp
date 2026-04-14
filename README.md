@@ -35,7 +35,7 @@ base64 -i de-devops-adc.json | tr -d '\n'
 Configure these for non-sensitive configuration:
 
 1. Go to **Settings → Variables → Actions**
-2. Add the following variables:
+2. Add the  following variables:
 
 | Variable | Value | Description |
 |----------|-------|-------------|
