@@ -1,0 +1,21 @@
+# Table Variables Template
+# Copy this file to your table folder and rename to variables.tf
+
+variable "table" {
+  description = "Configuration for table"
+  type = object({
+    dataset_id           = string
+    table_id             = string
+    partitioning         = optional(any)
+    clustering            = optional(list(string))
+    schema_file          = string
+    deletion_protection   = bool
+  })
+
+  default = {
+    dataset_id           = "your_dataset"
+    table_id             = "your_table"
+    schema_file          = "schema.json"
+    deletion_protection  = true
+  }
+}

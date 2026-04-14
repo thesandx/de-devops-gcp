@@ -1,0 +1,22 @@
+# Dataset Variables Template
+# Copy this file to your dataset folder and rename to variables.tf
+
+variable "dataset" {
+  description = "Configuration for dataset"
+  type = object({
+    dataset_id    = string
+    description   = string
+    location      = string
+    labels        = map(string)
+  })
+
+  default = {
+    dataset_id  = "your_dataset_id"
+    description = "Description of your dataset"
+    location    = "asia-southeast1"
+    labels = {
+      environment = "prod"
+      team       = "data"
+    }
+  }
+}

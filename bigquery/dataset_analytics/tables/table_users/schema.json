@@ -1,0 +1,59 @@
+{
+  "table_name": "users",
+  "dataset": "analytics",
+  "partitioning": {
+    "type": "DAY",
+    "field": "created_at"
+  },
+  "clustering": ["country", "status"],
+  "schema": [
+    {
+      "name": "user_id",
+      "type": "STRING",
+      "mode": "REQUIRED",
+      "description": "Unique user identifier"
+    },
+    {
+      "name": "email",
+      "type": "STRING",
+      "mode": "REQUIRED",
+      "description": "User email address"
+    },
+    {
+      "name": "full_name",
+      "type": "STRING",
+      "mode": "NULLABLE",
+      "description": "User full name"
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMP",
+      "mode": "REQUIRED",
+      "description": "Account creation timestamp"
+    },
+    {
+      "name": "updated_at",
+      "type": "TIMESTAMP",
+      "mode": "NULLABLE",
+      "description": "Last update timestamp"
+    },
+    {
+      "name": "country",
+      "type": "STRING",
+      "mode": "NULLABLE",
+      "description": "User country code (ISO 3166-1 alpha-2)"
+    },
+    {
+      "name": "status",
+      "type": "STRING",
+      "mode": "NULLABLE",
+      "description": "Account status (active, inactive, suspended)"
+    },
+    {
+      "name": "last_login_at",
+      "type": "TIMESTAMP",
+      "mode": "NULLABLE",
+      "description": "Last login timestamp"
+    }
+  ]
+}
