@@ -106,7 +106,7 @@ jobs:
               commentBody += `\`\`\`\n${planOutput}\n\`\`\`\n</details>\n\n`;
               commentBody += `**Next Steps:**\n`;
               commentBody += `1. Review the plan above\n`;
-              commentBody += `2. Get the PR approved\n`;
+              commentBody += `2. The PR will be automatically approved upon successful plan\n`;
               commentBody += `3. Comment \`/apply\` to run terraform apply`;
             }
 
@@ -154,3 +154,43 @@ jobs:
         run: |
           echo "Terraform plan failed with exit code $plan_exit_code"
           exit 1
+
+      - name: Auto Approve PR on Successful Plan
+        if: env.plan_exit_code == '0'
+        env:
+          PR_NUMBER: ${{ steps.pr-number.outputs.result }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = parseInt(process.env.PR_NUMBER);
+
+            if (!prNumber) {
+              console.log('No PR number found, skipping auto-approve');
+              return;
+            }
+
+            // Check if PR is already approved
+            const reviews = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+
+            const alreadyApproved = reviews.data.some(r => r.state === 'APPROVED');
+
+            if (alreadyApproved) {
+              console.log('PR is already approved, skipping auto-approve');
+              return;
+            }
+
+            // Auto approve the PR
+            await github.rest.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              event: 'APPROVE',
+              body: `✅ **Terraform Plan Approved**\n\nThis PR has been automatically approved after a successful terraform plan.`
+            });
+
+            console.log('PR automatically approved');
