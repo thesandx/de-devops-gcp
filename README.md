@@ -45,7 +45,7 @@ Configure these for non-sensitive configuration:
 
 ### 3. Enable Branch Protection
 
-Ensure `master` branch has protection rules enabled requiring PR approval before merge.
+Ensure `master` branch has  protection rules enabled requiring PR approval before merge.
 
 ## Workflow Usage
 
