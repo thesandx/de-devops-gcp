@@ -4,7 +4,7 @@ This repository contains Terraform configurations for managing GCP resources wit
 
 ## Architecture
 
-The CI/CD pipeline uses GitHub Actions to manage terraform operations with the following workflow:
+The CI/CD  pipeline uses GitHub Actions to manage terraform operations with the following workflow:
 
 ```
 PR Opened → /plan comment → Terraform Plan runs → Output posted to PR
