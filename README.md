@@ -64,7 +64,7 @@ Ensure `master` branch has  protection rules enabled requiring PR approval befor
 
 1. Ensure the plan has run successfully
 2. Get the PR approved by a reviewer
-3. Comment `/apply` on the  PR
+3. Comment `/apply` on the PR
 4. The workflow will:
    - Verify PR is approved
    - Run `terraform apply`
