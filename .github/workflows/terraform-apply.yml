@@ -196,6 +196,28 @@ jobs:
               body: commentBody
             });
 
+            // Update PR title with emoji
+            const { data: pr } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+            });
+            let currentTitle = pr.title;
+            // Remove leading emojis and trim
+            const cleanedTitle = currentTitle.replace(/^[✅❌]\s*/, '').trim();
+            const newTitle = applyFailed ? `❌ ${cleanedTitle}` : `✅ ${cleanedTitle}`;
+            if (currentTitle !== newTitle) {
+                await github.rest.pulls.update({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    pull_number: prNumber,
+                    title: newTitle,
+                });
+                console.log(`Updated PR title to: ${newTitle}`);
+            } else {
+                console.log('PR title already up to date');
+            }
+
       - name: Fail if apply failed
         if: env.apply_exit_code != '0'
         run: |
