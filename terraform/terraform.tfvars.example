@@ -1,0 +1,79 @@
+# Example terraform.tfvars file for DE DevOps GCP project
+# Copy this file to terraform.tfvars and fill in your values.
+# This file is ignored by .gitignore to prevent committing secrets.
+
+# Basic GCP configuration
+project_id       = "de-devops"
+region           = "asia-southeast1"
+credentials_file = "de-devops-adc.json"
+
+# Dataset configurations
+dataset_analytics = {
+  dataset_id  = "analytics"
+  description = "Analytics dataset for business metrics and user data"
+  location    = "asia-southeast1"
+  labels = {
+    environment = "prod"
+    team        = "data"
+  }
+}
+
+dataset_raw = {
+  dataset_id  = "raw"
+  description = "Raw dataset for staging and landing data"
+  location    = "asia-southeast1"
+  labels = {
+    environment = "prod"
+    team        = "data"
+  }
+}
+
+# GCS Bucket configurations
+bucket_data_lake = {
+  name          = "de-devops-data-lake"
+  location      = "asia-southeast1"
+  storage_class = "STANDARD"
+  labels = {
+    environment = "prod"
+    team        = "data"
+  }
+  iam_members = [
+    {
+      role   = "roles/storage.objectViewer"
+      member = "user:nikhila.nethikunta@gmail.com"
+    }
+  ]
+}
+
+bucket_configs = {
+  name          = "de-devops-configs"
+  location      = "asia-southeast1"
+  storage_class = "STANDARD"
+  labels = {
+    environment = "prod"
+    team        = "platform"
+  }
+  iam_members = []
+}
+
+# Table configurations (optional overrides)
+table_users = {
+  dataset_id          = "analytics"
+  table_id            = "users"
+  schema_file         = "schema.json"
+  deletion_protection = true
+}
+
+table_events = {
+  dataset_id          = "analytics"
+  table_id            = "events"
+  schema_file         = "schema.json"
+  deletion_protection = true
+}
+
+table_logs = {
+  dataset_id          = "raw"
+  table_id            = "logs"
+  schema_file         = "schema.json"
+  deletion_protection = true
+}

@@ -16,14 +16,7 @@ This file configures the Terraform provider:
 - Sets the required provider version
 - Configures authentication using a service account key file
 - Sets the GCP project and region
-
-### variables.tf
-This file defines the input variables used in the configuration:
-- `project_id`: The ID of your GCP project
-- `region`: The GCP region to deploy resources to (default: asia-southeast1)
-- `bucket_name`: The name for the Cloud Storage bucket
-- `credentials_file`: Path to your service account key file
-- `bigquery_dataset`: The ID for the BigQuery dataset
+- **Also contains all variable definitions** (since there is no separate variables.tf)
 
 ### outputs.tf
 This file defines the output values that will be displayed after applying the configuration:
@@ -32,16 +25,62 @@ This file defines the output values that will be displayed after applying the co
 - `bucket_url`: The URL of the created Cloud Storage bucket
 - `bigquery_dataset`: The ID of the created BigQuery dataset
 
+## Using .tfvars Files
+
+`.tfvars` files (Terraform variable files) are used to provide values for variables defined in your Terraform configuration. They allow you to separate configuration from code, making it easier to manage different environments (dev, staging, prod) and keep sensitive values out of version control.
+
+### Benefits of .tfvars Files
+1. **Environment Separation**: Create different `.tfvars` files for each environment (e.g., `dev.tfvars`, `prod.tfvars`)
+2. **Security**: Keep sensitive values like credentials out of your main Terraform files
+3. **Reusability**: Use the same Terraform code with different variable values
+4. **Git Ignored**: `.gitignore` already excludes `*.tfvars` and `*.tfvars.json` files
+
+### How to Use .tfvars in This Project
+
+1. **Create a `terraform.tfvars` file** (or copy the example):
+   ```bash
+   cp terraform.tfvars.example terraform.tfvars
+   ```
+
+2. **Edit the `terraform.tfvars` file** with your specific values:
+   - Update `project_id`, `region`, `credentials_file`
+   - Modify dataset and bucket configurations as needed
+   - Add IAM members, labels, etc.
+
+3. **Run Terraform with the `.tfvars` file**:
+   ```bash
+   terraform plan -var-file="terraform.tfvars"
+   ```
+   Or simply `terraform plan` (Terraform automatically loads `terraform.tfvars` if present)
+
+4. **Use multiple environments**:
+   ```bash
+   terraform plan -var-file="dev.tfvars"
+   terraform apply -var-file="dev.tfvars"
+   ```
+
+### Variable File Precedence
+Terraform loads variables in this order (later overrides earlier):
+1. Environment variables (`TF_VAR_name`)
+2. `terraform.tfvars` (if present)
+3. `terraform.tfvars.json` (if present)
+4. Any `*.auto.tfvars` or `*.auto.tfvars.json` files
+5. Command-line `-var` or `-var-file` arguments
+
+### Example Variable Files
+- `terraform.tfvars.example`: Example configuration with all variables (safe to commit)
+- `terraform.tfvars`: Your actual configuration (should be kept private)
+
 ## Running Terraform
 
 ### Prerequisites
 1. Install Terraform (version 1.0.0 or later recommended)
 2. Set up a GCP account and project
 3. Create a service account with appropriate permissions
-4. Download the service account key file (JSON) <gcloud auth application-default login>
-5. it will save file in /Users/sandeepkumarjha/.config/gcloud/application_default_credentials.json
-6. cat <above location> copy content and create a new json file <de-devops-adc.json> inside terraform folder
-7. paste the json content from above and update credentials_file path in varibles.tf
+4. Download the service account key file (JSON) `<gcloud auth application-default login>`
+5. It will save file in `/Users/sandeepkumarjha/.config/gcloud/application_default_credentials.json`
+6. `cat <above location>` copy content and create a new json file `<de-devops-adc.json>` inside terraform folder
+7. Paste the json content from above and update credentials_file path in variables.tf
 
 ### Configuration
 Before running Terraform, update the `variables.tf` file or create a `terraform.tfvars` file with your specific values:
@@ -80,7 +119,26 @@ bigquery_dataset = "your_dataset_name"
    ```
    This command destroys all resources created by the Terraform configuration. Use with caution!
 
+## Best Practices for .tfvars in CI/CD
+
+1. **Never commit sensitive `.tfvars` files** - Use CI/CD secret variables instead
+2. **Use environment-specific files** - Create `dev.tfvars`, `staging.tfvars`, `prod.tfvars`
+3. **Combine with Terraform Cloud/Enterprise** - Use workspace variables for sensitive data
+4. **Use `*.auto.tfvars` for automatic loading** - Files named `*.auto.tfvars` are loaded automatically
+5. **Validate variable files** - Use `terraform validate` to check syntax
+
+### GitHub Actions Integration
+In your GitHub Actions workflow, you can pass variables via environment variables:
+```yaml
+env:
+  TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+  TF_VAR_credentials_file: ""
+```
+
+Or use a secret `.tfvars` file stored as a secret and decoded at runtime.
+
 ## Notes
 - Make sure your service account has the necessary permissions to create the resources defined in the configuration.
 - The Cloud Storage bucket name must be globally unique across all of GCP.
 - Remember to keep your service account key file secure and never commit it to version control.
+- `.tfvars` files are ignored by `.gitignore` to prevent accidental commits of sensitive data.
