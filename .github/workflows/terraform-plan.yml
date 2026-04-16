@@ -45,6 +45,31 @@ jobs:
             }
             return null;
 
+      - name: "Check PR Approval Status"
+        id: approval-check
+        env:
+          PR_NUMBER: ${{ steps.pr-number.outputs.result }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = parseInt(process.env.PR_NUMBER);
+
+            if (!prNumber) {
+              console.log('No PR number found, cannot check approval');
+              return false;
+            }
+
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+
+            if (pr.state === 'closed') {
+              throw new Error('PR is already closed');
+            }
+            return true;
+
       - name: Configure ADC
         env:
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
