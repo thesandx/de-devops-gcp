@@ -85,7 +85,7 @@ jobs:
       - name: Terraform Init
         id: init
         working-directory: terraform
-        run: terraform init -input=false
+        run: terraform init -input=false -upgrade
         env:
           GOOGLE_CREDENTIALS_CONTENT: ${{ secrets.GOOGLE_CREDENTIALS }}
 
