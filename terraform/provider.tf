@@ -132,6 +132,66 @@ variable "bucket_configs" {
   }
 }
 
+variable "bucket_raw_batch" {
+  description = "Configuration for raw batch ingestion bucket"
+  type = object({
+    name          = string
+    location      = string
+    storage_class = string
+    labels        = map(string)
+    iam_members = list(object({
+      role   = string
+      member = string
+    }))
+    lifecycle_rules = optional(list(object({
+      action_type    = string
+      age            = optional(number)
+      created_before = optional(string)
+    })))
+  })
+
+  default = {
+    name          = "de-devops-raw-batch"
+    location      = "asia-southeast1"
+    storage_class = "STANDARD"
+    labels = {
+      environment = "prod"
+      team        = "data"
+    }
+    iam_members = []
+  }
+}
+
+variable "bucket_raw_streaming" {
+  description = "Configuration for raw streaming ingestion bucket"
+  type = object({
+    name          = string
+    location      = string
+    storage_class = string
+    labels        = map(string)
+    iam_members = list(object({
+      role   = string
+      member = string
+    }))
+    lifecycle_rules = optional(list(object({
+      action_type    = string
+      age            = optional(number)
+      created_before = optional(string)
+    })))
+  })
+
+  default = {
+    name          = "de-devops-raw-streaming"
+    location      = "asia-southeast1"
+    storage_class = "STANDARD"
+    labels = {
+      environment = "prod"
+      team        = "data"
+    }
+    iam_members = []
+  }
+}
+
 # ============================================
 # BigQuery Table Configurations - Analytics
 # ============================================
