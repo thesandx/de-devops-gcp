@@ -99,7 +99,7 @@ jobs:
       - name: Terraform Init
         id: init
         working-directory: terraform
-        run: terraform init -input=false
+        run: terraform init -input=false -upgrade
 
       - name: Terraform Apply
         id: apply
