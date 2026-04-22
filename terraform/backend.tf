@@ -4,12 +4,12 @@ terraform {
     prefix  = "terraform/state"
   }
 
-  required_version = ">= 1.0"
+  required_version = ">= 1.14.9"
 
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~> 4.0"
+      version = "~> 7.0"
     }
   }
 }
