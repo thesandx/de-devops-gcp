@@ -56,6 +56,28 @@ bucket_configs = {
   iam_members = []
 }
 
+bucket_raw_batch = {
+  name          = "de-devops-raw-batch"
+  location      = "asia-southeast1"
+  storage_class = "STANDARD"
+  labels = {
+    environment = "prod"
+    team        = "data"
+  }
+  iam_members = []
+}
+
+bucket_raw_streaming = {
+  name          = "de-devops-raw-streaming"
+  location      = "asia-southeast1"
+  storage_class = "STANDARD"
+  labels = {
+    environment = "prod"
+    team        = "data"
+  }
+  iam_members = []
+}
+
 # Table configurations (optional overrides)
 table_users = {
   dataset_id          = "analytics"

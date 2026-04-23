@@ -1,7 +1,7 @@
 terraform {
   backend "gcs" {
-    bucket  = "de-devops-tf-state" # Replace with your actual globally unique bucket name
-    prefix  = "terraform/state"
+    bucket = "de-devops-tf-state" # Replace with your actual globally unique bucket name
+    prefix = "terraform/state"
   }
 
   required_version = ">= 1.14.9"

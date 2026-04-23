@@ -110,3 +110,23 @@ module "storage_bucket_configs" {
   bucket_labels = var.bucket_configs.labels
   iam_members   = var.bucket_configs.iam_members
 }
+
+module "storage_bucket_raw_batch" {
+  source = "../storage/bucket_raw"
+
+  bucket_name   = var.bucket_raw_batch.name
+  location      = var.bucket_raw_batch.location
+  storage_class = var.bucket_raw_batch.storage_class
+  bucket_labels = var.bucket_raw_batch.labels
+  iam_members   = var.bucket_raw_batch.iam_members
+}
+
+module "storage_bucket_raw_streaming" {
+  source = "../storage/bucket_raw"
+
+  bucket_name   = var.bucket_raw_streaming.name
+  location      = var.bucket_raw_streaming.location
+  storage_class = var.bucket_raw_streaming.storage_class
+  bucket_labels = var.bucket_raw_streaming.labels
+  iam_members   = var.bucket_raw_streaming.iam_members
+}
