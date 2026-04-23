@@ -26,9 +26,6 @@ jobs:
       issues: write
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: "Get PR number"
         id: pr-number
         uses: actions/github-script@v7
@@ -44,6 +41,11 @@ jobs:
               return context.payload.client_payload.pr_number;
             }
             return null;
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr-number.outputs.result && format('refs/pull/{0}/head', steps.pr-number.outputs.result) || '' }}
 
       - name: "Check PR Approval Status"
         id: approval-check
