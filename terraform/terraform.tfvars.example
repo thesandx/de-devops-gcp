@@ -28,6 +28,52 @@ dataset_raw = {
   }
 }
 
+# ============================================
+# Medallion Architecture Datasets (Task 1.2)
+# ============================================
+
+# ODP - Operational Data Platform (Bronze/Staging layer)
+dataset_odp_staging = {
+  dataset_id  = "odp_staging"
+  description = "Operational Data Platform - Bronze/Staging layer for raw ingested data"
+  location    = "asia-southeast1"
+  labels = {
+    environment = "prod"
+    team        = "data"
+    layer       = "staging"
+    medallion   = "bronze"
+  }
+}
+
+# FDP - Foundation Data Platform (Silver/Conformed layer)
+dataset_fdp_conformed = {
+  dataset_id  = "fdp_conformed"
+  description = "Foundation Data Platform - Silver/Conformed layer with cleansed and deduplicated data"
+  location    = "asia-southeast1"
+  labels = {
+    environment = "prod"
+    team        = "data"
+    layer       = "conformed"
+    medallion   = "silver"
+  }
+}
+
+# CDP - Core Data Platform (Gold layer)
+dataset_cdp_core = {
+  dataset_id  = "cdp_core"
+  description = "Core Data Platform - Gold layer with highly aggregated business metrics"
+  location    = "asia-southeast1"
+  labels = {
+    environment = "prod"
+    team        = "data"
+    layer       = "core"
+    medallion   = "gold"
+  }
+}
+
+# Human analyst email (read-only access to medallion datasets)
+analyst_email = "nikhila.nethikunta@gmail.com"
+
 # GCS Bucket configurations
 bucket_data_lake = {
   name          = "de-devops-data-lake"

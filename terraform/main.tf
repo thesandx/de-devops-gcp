@@ -62,6 +62,43 @@ module "bigquery_dataset_raw" {
 }
 
 # ============================================
+# Medallion Architecture Datasets (Task 1.2)
+# ============================================
+
+module "bigquery_dataset_odp_staging" {
+  source = "../bigquery/dataset_odp_staging"
+
+  dataset_id            = var.dataset_odp_staging.dataset_id
+  description           = var.dataset_odp_staging.description
+  location              = var.dataset_odp_staging.location
+  labels                = var.dataset_odp_staging.labels
+  service_account_email = google_service_account.data_pipeline.email
+  analyst_email         = var.analyst_email
+}
+
+module "bigquery_dataset_fdp_conformed" {
+  source = "../bigquery/dataset_fdp_conformed"
+
+  dataset_id            = var.dataset_fdp_conformed.dataset_id
+  description           = var.dataset_fdp_conformed.description
+  location              = var.dataset_fdp_conformed.location
+  labels                = var.dataset_fdp_conformed.labels
+  service_account_email = google_service_account.data_pipeline.email
+  analyst_email         = var.analyst_email
+}
+
+module "bigquery_dataset_cdp_core" {
+  source = "../bigquery/dataset_cdp_core"
+
+  dataset_id            = var.dataset_cdp_core.dataset_id
+  description           = var.dataset_cdp_core.description
+  location              = var.dataset_cdp_core.location
+  labels                = var.dataset_cdp_core.labels
+  service_account_email = google_service_account.data_pipeline.email
+  analyst_email         = var.analyst_email
+}
+
+# ============================================
 # BigQuery Tables - Analytics Dataset
 # ============================================
 
