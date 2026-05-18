@@ -69,6 +69,82 @@ variable "dataset_raw" {
 }
 
 # ============================================
+# Medallion Architecture Datasets (Task 1.2)
+# ============================================
+
+variable "dataset_odp_staging" {
+  description = "Configuration for ODP (Operational Data Platform) - Bronze/Staging layer"
+  type = object({
+    dataset_id  = string
+    description = string
+    location    = string
+    labels      = map(string)
+  })
+
+  default = {
+    dataset_id  = "odp_staging"
+    description = "Operational Data Platform - Bronze/Staging layer for raw ingested data"
+    location    = "asia-southeast1"
+    labels = {
+      environment = "prod"
+      team        = "data"
+      layer       = "staging"
+      medallion   = "bronze"
+    }
+  }
+}
+
+variable "dataset_fdp_conformed" {
+  description = "Configuration for FDP (Foundation Data Platform) - Silver/Conformed layer"
+  type = object({
+    dataset_id  = string
+    description = string
+    location    = string
+    labels      = map(string)
+  })
+
+  default = {
+    dataset_id  = "fdp_conformed"
+    description = "Foundation Data Platform - Silver/Conformed layer with cleansed and deduplicated data"
+    location    = "asia-southeast1"
+    labels = {
+      environment = "prod"
+      team        = "data"
+      layer       = "conformed"
+      medallion   = "silver"
+    }
+  }
+}
+
+variable "dataset_cdp_core" {
+  description = "Configuration for CDP (Core Data Platform) - Gold layer with business-ready metrics"
+  type = object({
+    dataset_id  = string
+    description = string
+    location    = string
+    labels      = map(string)
+  })
+
+  default = {
+    dataset_id  = "cdp_core"
+    description = "Core Data Platform - Gold layer with highly aggregated business metrics"
+    location    = "asia-southeast1"
+    labels = {
+      environment = "prod"
+      team        = "data"
+      layer       = "core"
+      medallion   = "gold"
+    }
+  }
+}
+
+variable "analyst_email" {
+  description = "Email of the human analyst that will have read-only access (dataViewer) to medallion datasets"
+  type        = string
+  default     = "nikhila.nethikunta@gmail.com"
+}
+
+# ============================================
 # GCS Bucket Configurations
 # ============================================
 
